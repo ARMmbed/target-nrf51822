@@ -27,14 +27,45 @@ set(NRF51822_SOFTDEVICE_HEX_FILE "${CMAKE_CURRENT_LIST_DIR}/../softdevice/s130_n
 # define a function for yotta to apply target-specific rules to build products,
 # in our case we need to convert the built elf file to .hex, and add the
 # pre-built softdevice:
+
+# first find the post-processing programs that we need
+find_program(ARM_NONE_EABI_OBJCOPY arm-none-eabi-objcopy)
+find_program(SREC_CAT_PROGRAM srec_cat)
+
+macro(srec_program_notfound progname)
+    message("**************************************************************************\n")
+    message(" ERROR: the s-record program ${progname} could not be found\n")
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        message(" you can install the s-record tools from:")
+        message(" https://!!!FIXME ")
+    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+        message(" it is included in the srecords package that you can install")
+        message(" with homebrew:\n")
+        message("   brew install srecord")
+    endif()
+    message("\n**************************************************************************")
+    message(FATAL_ERROR "missing program prevents build")
+    return()
+endmacro()
+
+if(NOT SREC_CAT_PROGRAM)
+    srec_program_notfound("srec_cat")
+endif()
+
+if(NOT ARM_NONE_EABI_OBJCOPY)
+    # gcc_program_notfound is defined by the mbed-gcc target
+    gcc_program_notfound("arm-none-eabi-objcopy")
+endif()
+
+# now define the actual post-processing steps
 function(yotta_apply_target_rules target_type target_name)
     if(${target_type} STREQUAL "EXECUTABLE")
         add_custom_command(TARGET ${target_name}
             POST_BUILD
             # objcopy to hex
-            COMMAND arm-none-eabi-objcopy -O ihex ${target_name} ${target_name}.hex
+            COMMAND ${ARM_NONE_EABI_OBJCOPY} -O ihex ${target_name} ${target_name}.hex
             # and append the softdevice hex file
-            COMMAND srec_cat ${NRF51822_SOFTDEVICE_HEX_FILE} -intel ${target_name}.hex -intel -o ${target_name}-combined.hex -intel --line-length=44
+            COMMAND ${SREC_CAT_PROGRAM} ${NRF51822_SOFTDEVICE_HEX_FILE} -intel ${target_name}.hex -intel -o ${target_name}-combined.hex -intel --line-length=44
             COMMENT "hexifying and adding softdevice to ${target_name}"
             VERBATIM
         )
