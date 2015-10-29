@@ -1,0 +1,9 @@
+Instructions for fetching the Nordic S130 v1.0.0 Softdevice
+===========================================================
+
+This folder needs to contain the file s130_nrf51_1.0.0_softdevice.hex to allow
+proper builds with this target. This is the S130 Softdevice from v8.1.0 of the
+Nordic nRF51 SDK. To get this file:
+
+* Download the Nordic nRF51 SDK from http://developer.nordicsemi.com/nRF51_SDK/nRF51_SDK_v8.x.x/nRF51_SDK_8.1.0_b6ed55f.zip and unpack in some temporary location, say 'tmpDir/'.
+* Fetch the softdevice from `<tmpDir>/components/softdevice/s130/hex/s130_softdevice.hex`, copy it into this folder, and rename it as `s130_nrf51_1.0.0_softdevice.hex`.
